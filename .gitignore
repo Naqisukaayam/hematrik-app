@@ -1,0 +1,24 @@
+# Environments
+.venv/
+env/
+venv/
+
+# Node dependencies
+node_modules/
+dist/
+build/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Temporary & Installer files
+python-installer.exe
+install.log
+captures/
+
+# OS metadata
+.DS_Store
+Thumbs.db

@@ -1,0 +1,10 @@
+{
+  "name": "hematrik-app",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix yolo-api/hematrik-frontend run dev",
+    "frontend": "npm --prefix yolo-api/hematrik-frontend run dev",
+    "backend": "python yolo-api/main.py"
+  }
+}

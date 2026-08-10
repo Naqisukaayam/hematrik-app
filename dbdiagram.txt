@@ -1,0 +1,73 @@
+// Versi dbdiagram.io yang diberi label relasi dan keterangan bahasa Indonesia
+
+Table users {
+  id int [pk, increment] // id pengguna
+  email varchar(120) [unique, not null] // alamat email
+  password varchar(255) [not null] // password hash
+  nama varchar(120) [not null] // nama lengkap
+  role varchar(30) [default: 'admin'] // peran (admin/user)
+  created_at timestamp [default: `CURRENT_TIMESTAMP`] // waktu dibuat
+}
+
+Table logs {
+  id int [pk, increment] // id log deteksi
+  waktu varchar(50) // waktu tampil (string)
+  orang int [default: 0] // jumlah orang terdeteksi
+  lampu varchar(10) [default: 'OFF'] // status lampu
+  ac varchar(10) [default: 'OFF'] // status AC
+  dispenser varchar(10) [default: 'OFF'] // status dispenser
+  kondisi varchar(20) // ringkasan kondisi
+  gambar varchar(255) // path/filename gambar
+  power_ac_w float [default: 0]
+  power_lampu_w float [default: 0]
+  notifikasi text // teks notifikasi
+  sumber varchar(30) [default: 'camera']
+  metode_deteksi varchar(30) [default: 'yolo']
+  confidence_avg float [default: 0]
+  risk_score int [default: 0]
+  user_id int [null] // referensi ke users.id
+}
+
+Table data_keseluruhan {
+  id int [pk, increment]
+  log_id int [not null] // referensi ke logs.id
+  device_id varchar(20) [not null] // id perangkat IoT
+  total_kwh float [default: 0]
+  today_kwh float [default: 0]
+  yesterday_kwh float [default: 0]
+  power float [default: 0]
+  apparent_power float [default: 0]
+  reactive_power float [default: 0]
+  factor float [default: 0]
+  voltage float [default: 0]
+  current float [default: 0]
+  time_recorded varchar(50)
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+}
+
+Table detection_corrections {
+  id int [pk, increment]
+  log_id int [null] // referensi opsional ke logs.id
+  predicted_people int [default: 0]
+  corrected_people int [default: 0]
+  predicted_lampu varchar(10) [default: 'OFF']
+  corrected_lampu varchar(10) [default: 'OFF']
+  predicted_ac varchar(10) [default: 'OFF']
+  corrected_ac varchar(10) [default: 'OFF']
+  catatan text
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+}
+
+Table notification_actions {
+  id int [pk, increment]
+  log_id int [unique, not null] // 1-to-1 ke logs.id
+  status varchar(30) [default: 'BARU']
+  catatan text
+  updated_at timestamp [default: `CURRENT_TIMESTAMP`]
+}
+
+// Relasi dengan keterangan (bahasa Indonesia)
+Ref: logs.user_id > users.id // users 1 - * logs (Melakukan)
+Ref: data_keseluruhan.log_id > logs.id // logs 1 - * data_keseluruhan (Memiliki data IoT)
+Ref: detection_corrections.log_id > logs.id // logs 1 - * detection_corrections (Koreksi deteksi)
+Ref: notification_actions.log_id > logs.id // logs 1 - 1 notification_actions (Menangani notifikasi)
