@@ -14,7 +14,7 @@ export function useMonitoring() {
   const [curImg,    setCurImg]    = useState(null);
   const [error,     setError]     = useState(null);
   const [countdown, setCountdown] = useState(AUTO_CEK_INTERVAL);
-  const [autoMode,  setAutoMode]  = useState(true);
+  const [autoMode,  setAutoMode]  = useState(false); // Default: Manual mode (no auto capture for privacy)
   const loadingRef = useRef(false);
 
   // ── Summary dihitung LANGSUNG dari history (konsisten dengan halaman Riwayat) ──
@@ -86,10 +86,9 @@ export function useMonitoring() {
     setCountdown(AUTO_CEK_INTERVAL);
   }, [doCheck]);
 
-  // ── Auto CEK setiap 2 menit ─────────────────────────────────
+  // ── Auto CEK (hanya berjalan jika pengguna mengaktifkan Auto Mode secara manual) ──
   useEffect(() => {
     if (!autoMode) return;
-    doCheck();
     const t = setInterval(() => {
       doCheck();
       setCountdown(AUTO_CEK_INTERVAL);
