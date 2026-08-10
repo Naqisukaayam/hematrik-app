@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 const ROLE_COLORS = {
   Administrator: { bg: "#fee2e2", color: "#dc2626" },
@@ -7,7 +7,7 @@ const ROLE_COLORS = {
 };
 
 const ROLE_OPTIONS = ["Administrator", "Pelaksana Umum", "Viewer"];
-const API = "http://127.0.0.1:8000";
+const API = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 
 const getAuthHeaders = () => {
   const token = window.localStorage.getItem("hematrix_token");
