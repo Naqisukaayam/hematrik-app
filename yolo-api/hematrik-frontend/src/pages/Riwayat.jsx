@@ -1,6 +1,7 @@
 import { useState } from "react";
 import KondisiBadge from "../components/KondisiBadge";
 import { Ico, P } from "../utils/icons";
+import { exportHistoryPdf } from "../utils/exportPdf";
 
 const PER_PAGE = 10;
 
@@ -115,10 +116,11 @@ function ImgThumb({ url, onOpen }) {
 }
 
 export default function Riwayat({ history, setModalImg }) {
-  const [page,     setPage]     = useState(1);
-  const [search,   setSearch]   = useState("");
-  const [filter,   setFilter]   = useState("SEMUA");
-  const [modalSrc, setModalSrc] = useState(null);
+  const [page,        setPage]        = useState(1);
+  const [search,      setSearch]      = useState("");
+  const [filter,      setFilter]      = useState("SEMUA");
+  const [modalSrc,    setModalSrc]    = useState(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   const openImg = (url) => {
     if (setModalImg) setModalImg(url);
@@ -145,6 +147,19 @@ export default function Riwayat({ history, setModalImg }) {
 
   const handleFilter = (f) => { setFilter(f); setPage(1); };
   const handleSearch = (v) => { setSearch(v); setPage(1); };
+
+  const handleExportPdf = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    try {
+      await exportHistoryPdf(filtered, { normal, aman, peringatan, pemborosan }, filter);
+    } catch (err) {
+      console.error("Gagal export PDF:", err);
+      alert("Gagal mengekspor PDF: " + (err.message || "terjadi kesalahan"));
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <>
@@ -178,9 +193,18 @@ export default function Riwayat({ history, setModalImg }) {
           <select value={filter} onChange={e => handleFilter(e.target.value)} style={{ padding: "6px 10px", border: "1px solid #e5e7eb", borderRadius: 7, fontSize: 11, fontFamily: "inherit", color: "#374151", outline: "none", background: "#fff", cursor: "pointer" }}>
             {["SEMUA","NORMAL","AMAN","PEMBOROSAN","PERINGATAN"].map(f => <option key={f} value={f}>{f === "SEMUA" ? "Filter Kondisi" : f}</option>)}
           </select>
-          <button style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", border: "none", borderRadius: 7, background: "#16a34a", fontSize: 11, fontWeight: 700, color: "#fff", cursor: "pointer", fontFamily: "inherit" }}>
+          <button
+            onClick={handleExportPdf}
+            disabled={isExporting}
+            style={{
+              display: "flex", alignItems: "center", gap: 6, padding: "6px 14px",
+              border: "none", borderRadius: 7, background: isExporting ? "#15803d" : "#16a34a",
+              fontSize: 11, fontWeight: 700, color: "#fff", cursor: isExporting ? "not-allowed" : "pointer",
+              fontFamily: "inherit", opacity: isExporting ? 0.8 : 1, transition: "all .15s",
+            }}
+          >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Export Data
+            {isExporting ? "Membuat PDF..." : "Export PDF"}
           </button>
         </div>
 
