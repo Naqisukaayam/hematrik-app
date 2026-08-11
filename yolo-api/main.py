@@ -11,7 +11,13 @@ Universitas Mandiri — Smart Energy Monitoring
 - process_lock mencegah proses ganda
 """
 
-import cv2, time, os, base64, threading, traceback, csv, io
+import sys, cv2, time, os, base64, threading, traceback, csv, io
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 import numpy as np
 from datetime import datetime
 from fastapi import FastAPI, UploadFile, File, Form
@@ -89,7 +95,8 @@ def get_db():
 
 def table_has_index(cur, table_name, index_name):
     cur.execute("SHOW INDEX FROM `{}` WHERE Key_name = %s".format(table_name), (index_name,))
-    return cur.fetchone() is not None
+    rows = cur.fetchall()
+    return len(rows) > 0
 
 
 def table_has_foreign_key(cur, table_name, constraint_name):
@@ -104,7 +111,8 @@ def table_has_foreign_key(cur, table_name, constraint_name):
         """,
         (table_name, constraint_name),
     )
-    return cur.fetchone() is not None
+    rows = cur.fetchall()
+    return len(rows) > 0
 
 
 def ensure_column(cur, conn, table_name, column_name, definition):
@@ -126,7 +134,7 @@ def ensure_index(cur, conn, table_name, index_name, column_def):
             print(f"⚠️  Gagal membuat index {index_name}: {e}")
 
 
-def ensure_foreign_key(cur, conn, child_table, child_column, parent_table, parent_column, constraint_name, cleanup_sql=None):
+def ensure_foreign_key(cur, conn, child_table, child_column, parent_table, parent_column, constraint_name, cleanup_sql=None, on_delete="CASCADE"):
     if not table_has_foreign_key(cur, child_table, constraint_name):
         if cleanup_sql:
             try:
@@ -137,7 +145,7 @@ def ensure_foreign_key(cur, conn, child_table, child_column, parent_table, paren
                 print(f"⚠️  Cleanup FK {constraint_name} gagal: {e}")
         try:
             cur.execute(
-                f"ALTER TABLE `{child_table}` ADD CONSTRAINT {constraint_name} FOREIGN KEY (`{child_column}`) REFERENCES `{parent_table}`(`{parent_column}`) ON DELETE SET NULL ON UPDATE CASCADE"
+                f"ALTER TABLE `{child_table}` ADD CONSTRAINT {constraint_name} FOREIGN KEY (`{child_column}`) REFERENCES `{parent_table}`(`{parent_column}`) ON DELETE {on_delete} ON UPDATE CASCADE"
             )
             conn.commit()
             print(f"✅ Foreign key '{constraint_name}' ditambahkan ke {child_table}")
@@ -265,6 +273,7 @@ def ensure_tables():
             "id",
             "fk_logs_user_id",
             cleanup_sql=None,
+            on_delete="SET NULL",
         )
 
         ensure_foreign_key(
@@ -280,6 +289,7 @@ def ensure_tables():
                 LEFT JOIN logs l ON d.log_id = l.id
                 WHERE l.id IS NULL
             """,
+            on_delete="CASCADE",
         )
 
         ensure_foreign_key(
@@ -296,6 +306,7 @@ def ensure_tables():
                 SET dc.log_id = NULL
                 WHERE dc.log_id IS NOT NULL AND l.id IS NULL
             """,
+            on_delete="SET NULL",
         )
 
         ensure_foreign_key(
@@ -311,6 +322,7 @@ def ensure_tables():
                 LEFT JOIN logs l ON na.log_id = l.id
                 WHERE l.id IS NULL
             """,
+            on_delete="CASCADE",
         )
 
         # Admin default hanya dibuat kalau tabel users masih kosong.
@@ -376,16 +388,18 @@ threading.Thread(target=load_yolo, daemon=True).start()
 face_cascade = None
 if hasattr(cv2, "CascadeClassifier"):
     try:
-        cascade_path = os.path.join(cv2.data.haarcascades, "haarcascade_frontalface_default.xml")
-        if os.path.isfile(cascade_path):
-            fc = cv2.CascadeClassifier(cascade_path)
-            if hasattr(fc, 'empty') and not fc.empty():
-                face_cascade = fc
-                print(f"✅ Haar cascade loaded: {cascade_path}")
+        cv2_data = getattr(cv2, "data", None)
+        if cv2_data and hasattr(cv2_data, "haarcascades"):
+            cascade_path = os.path.join(cv2_data.haarcascades, "haarcascade_frontalface_default.xml")
+            if os.path.isfile(cascade_path):
+                fc = cv2.CascadeClassifier(cascade_path)
+                if hasattr(fc, 'empty') and not fc.empty():
+                    face_cascade = fc
+                    print(f"✅ Haar cascade loaded: {cascade_path}")
+                else:
+                    print(f"⚠️  Haar cascade tidak dapat dimuat atau kosong: {cascade_path}")
             else:
-                print(f"⚠️  Haar cascade tidak dapat dimuat atau kosong: {cascade_path}")
-        else:
-            print(f"⚠️  Haar cascade file tidak ditemukan: {cascade_path}")
+                print(f"⚠️  Haar cascade file tidak ditemukan: {cascade_path}")
     except Exception as e:
         print(f"⚠️  Gagal memuat Haar cascade: {e}")
 else:
