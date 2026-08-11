@@ -19,6 +19,10 @@ python-installer.exe
 install.log
 captures/
 
+# Executables & Model Weights
+*.exe
+*.pt
+
 # OS metadata
 .DS_Store
 Thumbs.db
