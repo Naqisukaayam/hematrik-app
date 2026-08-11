@@ -341,12 +341,15 @@ ensure_tables()
 os.makedirs(CAPTURES_DIR, exist_ok=True)
 
 @app.get("/captures/{filename}")
-@app.get("/api/captures/{filename}")
 def get_capture(filename: str):
     path = os.path.join(CAPTURES_DIR, filename)
     if os.path.isfile(path):
         return FileResponse(path, media_type="image/jpeg")
     return JSONResponse({"error": "tidak ditemukan"}, status_code=404)
+
+@app.get("/api/captures/{filename}")
+def get_api_capture(filename: str):
+    return get_capture(filename)
 
 # ─────────────────────────────────────────────────────────────
 # LOAD MODEL YOLO
