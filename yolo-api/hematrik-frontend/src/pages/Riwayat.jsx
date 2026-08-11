@@ -155,7 +155,13 @@ function ExportConfirmModal({ isOpen, onClose, onConfirm, totalData, filterName,
           <div style={{ background: "#f8fafc", borderRadius: 12, border: "1px solid #e2e8f0", padding: "12px 16px", display: "grid", gap: 8, fontSize: 12 }}>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <span style={{ color: "#64748b" }}>Jumlah Data:</span>
-              <strong style={{ color: "#0f172a" }}>{totalData} Pengecekan</strong>
+              <strong style={{ color: "#0f172a" }}>
+                {totalData > 100 ? `100 Data Terakhir (dari ${totalData})` : `${totalData} Pengecekan`}
+              </strong>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span style={{ color: "#64748b" }}>Batas Maksimal:</span>
+              <strong style={{ color: "#d97706" }}>100 Data (Optimasi Performa)</strong>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <span style={{ color: "#64748b" }}>Filter Kondisi:</span>

@@ -84,18 +84,19 @@ export async function exportHistoryPdf(dataList = [], summary = {}, filterName =
   doc.setFont("helvetica", "bold");
   doc.text("Ringkasan Laporan:", 18, 35);
 
+  // ── Preload Gambar & Batasi Maksimal 100 Data ──────────────
+  const targetData = dataList.slice(0, 100);
+
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
-  doc.text(`Lokasi: Ruang Dosen (Gedung 4)   |   Filter: ${filterName}   |   Total Data: ${dataList.length} Pengecekan`, 18, 41);
+  const countLabel = dataList.length > 100 ? `${targetData.length} dari ${dataList.length} (100 Terakhir)` : `${dataList.length} Pengecekan`;
+  doc.text(`Lokasi: Ruang Dosen (Gedung 4)   |   Filter: ${filterName}   |   Total Data: ${countLabel}`, 18, 41);
 
   const sumText = `Normal: ${summary.normal || 0}  |  Aman: ${summary.aman || 0}  |  Peringatan: ${summary.peringatan || 0}  |  Pemborosan: ${summary.pemborosan || 0}`;
   doc.setFont("helvetica", "bold");
   doc.setTextColor(22, 163, 74);
   doc.text(sumText, pageWidth - 18, 35, { align: "right" });
 
-  // ── Preload Gambar ───────────────────────────────────────
-  // Ambil maksimal 50 data untuk performa PDF dan preload gambar base64
-  const targetData = dataList.slice(0, 100);
   const imageMap = {};
 
   await Promise.all(
