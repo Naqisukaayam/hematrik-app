@@ -1046,13 +1046,13 @@ def process(user_id=None):
                     if ok:
                         img_b64 = "data:image/jpeg;base64," + base64.b64encode(buf).decode()
 
-                    # Simpan file (anti-spam)
+                    # Simpan file gambar deteksi
                     now = time.time()
-                    if now - LAST_CAPTURE >= CAPTURE_GAP:
-                        filename     = f"{int(now)}.jpg"
-                        cv2.imwrite(os.path.join(CAPTURES_DIR, filename), frame_out)
-                        LAST_CAPTURE = now
-                        print(f"📸 Capture: {filename}")
+                    filename = f"{int(now)}.jpg"
+                    os.makedirs(CAPTURES_DIR, exist_ok=True)
+                    cv2.imwrite(os.path.join(CAPTURES_DIR, filename), frame_out)
+                    LAST_CAPTURE = now
+                    print(f"📸 Capture: {filename}")
                 else:
                     camera_status = "frame_failed"
                     camera_message = "Kamera terbuka, tetapi frame/gambar gagal diambil."
