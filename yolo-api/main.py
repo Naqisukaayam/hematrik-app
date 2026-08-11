@@ -58,7 +58,8 @@ CAM_INDEX    = 0
 CAM_BACKEND  = cv2.CAP_MSMF
 
 # Folder capture
-CAPTURES_DIR = "captures"
+BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
+CAPTURES_DIR = os.path.join(BASE_DIR, "captures")
 CAPTURE_GAP  = 120   # detik minimum antar simpan file
 
 # Threshold IoT
@@ -355,6 +356,12 @@ os.makedirs(CAPTURES_DIR, exist_ok=True)
 @app.get("/captures/{filename}")
 def get_capture(filename: str):
     path = os.path.join(CAPTURES_DIR, filename)
+    if not os.path.isfile(path):
+        parent_captures = os.path.join(os.path.dirname(BASE_DIR), "captures")
+        alt_path = os.path.join(parent_captures, filename)
+        if os.path.isfile(alt_path):
+            path = alt_path
+
     if os.path.isfile(path):
         return FileResponse(path, media_type="image/jpeg")
     return JSONResponse({"error": "tidak ditemukan"}, status_code=404)

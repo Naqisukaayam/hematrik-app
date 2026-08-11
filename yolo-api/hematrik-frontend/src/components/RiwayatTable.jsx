@@ -1,6 +1,7 @@
 import { useState } from "react";
 import KondisiBadge from "./KondisiBadge";
 import { Ico, P } from "../utils/icons";
+import { resolveImgUrl } from "../utils/helpers";
 
 function ImgModal({ src, onClose }) {
   if (!src) return null;
@@ -85,40 +86,46 @@ export default function RiwayatTable({ data, onImg }) {
                     : "Ruangan kosong & aman"}
                 </td>
                 <td>
-                  {h.gambar_url ? (
-                    <div
-                      onClick={() => openImg(h.gambar_url)}
-                      title="Klik untuk zoom"
-                      style={{
-                        width: 48, height: 36, borderRadius: 6, overflow: "hidden",
-                        cursor: "pointer", border: "2px solid #e5e7eb",
-                        transition: "border-color .15s",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        background: "#f3f4f6",
-                      }}
-                      onMouseEnter={e => e.currentTarget.style.borderColor = "#16a34a"}
-                      onMouseLeave={e => e.currentTarget.style.borderColor = "#e5e7eb"}
-                    >
-                      <img
-                        src={h.gambar_url}
-                        alt="capture"
-                        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                        onError={e => {
-                          e.currentTarget.style.display = "none";
-                          e.currentTarget.parentElement.innerHTML =
-                            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
+                  {(() => {
+                    const imgUrl = resolveImgUrl(h.gambar_url || (h.gambar ? `/api/captures/${h.gambar}` : null));
+                    if (!imgUrl) {
+                      return (
+                        <div style={{
+                          width: 48, height: 36, borderRadius: 6,
+                          background: "#f3f4f6", border: "1px dashed #d1d5db",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                        }}>
+                          <Ico d={P.img} size={13} />
+                        </div>
+                      );
+                    }
+                    return (
+                      <div
+                        onClick={() => openImg(imgUrl)}
+                        title="Klik untuk zoom"
+                        style={{
+                          width: 48, height: 36, borderRadius: 6, overflow: "hidden",
+                          cursor: "pointer", border: "2px solid #e5e7eb",
+                          transition: "border-color .15s",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          background: "#f3f4f6",
                         }}
-                      />
-                    </div>
-                  ) : (
-                    <div style={{
-                      width: 48, height: 36, borderRadius: 6,
-                      background: "#f3f4f6", border: "1px dashed #d1d5db",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                    }}>
-                      <Ico d={P.img} size={13} />
-                    </div>
-                  )}
+                        onMouseEnter={e => e.currentTarget.style.borderColor = "#16a34a"}
+                        onMouseLeave={e => e.currentTarget.style.borderColor = "#e5e7eb"}
+                      >
+                        <img
+                          src={imgUrl}
+                          alt="capture"
+                          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                          onError={e => {
+                            e.currentTarget.style.display = "none";
+                            e.currentTarget.parentElement.innerHTML =
+                              '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
+                          }}
+                        />
+                      </div>
+                    );
+                  })()}
                 </td>
               </tr>
             ))}
