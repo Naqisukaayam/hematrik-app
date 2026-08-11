@@ -30,10 +30,45 @@ const PAGE_TITLES = {
 
 // App state flow: "landing" -> "login" -> "dashboard"
 export default function App() {
-  const [appState, setAppState] = useState("landing"); // "landing" | "login" | "app"
-  const [user,     setUser]     = useState(null);
-  const [page,     setPage]     = useState("dashboard");
+  const [user, setUser] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem("hematrix_user");
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [appState, setAppState] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem("hematrix_user");
+      const savedToken = localStorage.getItem("hematrix_token");
+      return (savedUser || savedToken) ? "app" : "landing";
+    } catch {
+      return "landing";
+    }
+  });
+
+  const [page, setPage] = useState(() => {
+    try {
+      const savedPage = localStorage.getItem("hematrix_page");
+      if (savedPage) return savedPage;
+      const savedUser = localStorage.getItem("hematrix_user");
+      if (savedUser) {
+        const u = JSON.parse(savedUser);
+        const role = (u.role || "").toString().trim().toLowerCase();
+        if (role === "admin" || role === "administrator") return "pengguna";
+      }
+    } catch {}
+    return "dashboard";
+  });
   const [modalImg, setModalImg] = useState(null);
+
+  useEffect(() => {
+    if (appState === "app" && page) {
+      localStorage.setItem("hematrix_page", page);
+    }
+  }, [page, appState]);
 
   const {
     data, status, history, summary, listrikH,
@@ -70,12 +105,22 @@ export default function App() {
   // Auth handlers
   const handleLogin = (userData) => {
     const normalizedRole = normalizeRole(userData.role);
-    setUser({ ...userData, role: normalizedRole, name: userData.nama || userData.name || "Admin" });
+    const userObj = { ...userData, role: normalizedRole, name: userData.nama || userData.name || "Admin" };
+    setUser(userObj);
+    localStorage.setItem("hematrix_user", JSON.stringify(userObj));
+    if (userData.token) {
+      localStorage.setItem("hematrix_token", userData.token);
+    }
     setAppState("app");
-    setPage(normalizedRole === "Administrator" ? "pengguna" : "dashboard");
+    const targetPage = normalizedRole === "Administrator" ? "pengguna" : "dashboard";
+    setPage(targetPage);
+    localStorage.setItem("hematrix_page", targetPage);
   };
 
   const handleLogout = () => {
+    localStorage.removeItem("hematrix_token");
+    localStorage.removeItem("hematrix_user");
+    localStorage.removeItem("hematrix_page");
     setUser(null);
     setAppState("landing");
     setPage("dashboard");
@@ -83,9 +128,12 @@ export default function App() {
 
   const handleGoToDashboard = () => {
     // Direct to dashboard without login (guest mode)
-    setUser({ name: "Admin", role: "Administrator", username: "admin" });
+    const guestUser = { name: "Admin", role: "Administrator", username: "admin" };
+    setUser(guestUser);
+    localStorage.setItem("hematrix_user", JSON.stringify(guestUser));
     setAppState("app");
     setPage("pengguna");
+    localStorage.setItem("hematrix_page", "pengguna");
   };
 
   // Render page content
