@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { fmtShort } from "../utils/helpers";
+import { fmtShort, resolveImgUrl } from "../utils/helpers";
 
 const API = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 
@@ -114,7 +114,7 @@ function historyToNotifList(history = []) {
     ac:         item.ac,
     lampu:      item.lampu,
     kondisi:    item.kondisi,
-    gambar_url: item.gambar_url,
+    gambar_url: resolveImgUrl(item.gambar_url || (item.gambar ? `/api/captures/${item.gambar}` : null)),
   }));
 }
 
@@ -134,7 +134,11 @@ export default function Notifikasi({ handleCek, loading, lastCek }) {
     try {
       const res  = await fetch(`${API}/history`);
       const data = await res.json();
-      setHistory(Array.isArray(data) ? data : []);
+      const rawList = Array.isArray(data) ? data : [];
+      setHistory(rawList.map(item => ({
+        ...item,
+        gambar_url: resolveImgUrl(item.gambar_url || (item.gambar ? `/api/captures/${item.gambar}` : null)),
+      })));
     } catch (e) {
       console.error("Gagal ambil history:", e);
     } finally {

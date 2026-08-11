@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import axios from "axios";
+import { resolveImgUrl } from "../utils/helpers";
 
 export const API = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 export const AUTO_CEK_INTERVAL = 2 * 60; // 2 menit dalam detik
@@ -11,7 +12,10 @@ export function useMonitoring() {
   const [listrikH,  setListrikH]  = useState([]);
   const [loading,   setLoading]   = useState(false);
   const [lastCek,   setLastCek]   = useState(null);
-  const [curImg,    setCurImg]    = useState(null);
+  const [curImg,    setCurImg]    = useState(() => {
+    try { return localStorage.getItem("hematrix_cur_img") || null; }
+    catch { return null; }
+  });
   const [error,     setError]     = useState(null);
   const [countdown, setCountdown] = useState(AUTO_CEK_INTERVAL);
   const [autoMode,  setAutoMode]  = useState(false); // Default: Manual mode (no auto capture for privacy)
@@ -34,9 +38,27 @@ export function useMonitoring() {
         axios.get(`${API}/history`),
         axios.get(`${API}/listrik/history`),
       ]);
-      setHistory(Array.isArray(h.data) ? h.data : []);
+      const rawList = Array.isArray(h.data) ? h.data : [];
+      const historyList = rawList.map(item => {
+        const fullImg = resolveImgUrl(item.gambar_url || (item.gambar ? `/api/captures/${item.gambar}` : null));
+        return {
+          ...item,
+          gambar_url: fullImg,
+        };
+      });
+      setHistory(historyList);
       setListrikH(Array.isArray(lh.data) ? lh.data : []);
       setError(null);
+
+      // Auto-set curImg dari item history terbaru yang punya gambar
+      const latestWithImg = historyList.find(item => item.gambar_url);
+      if (latestWithImg) {
+        setCurImg(prev => {
+          const target = prev || latestWithImg.gambar_url;
+          try { localStorage.setItem("hematrix_cur_img", target); } catch {}
+          return target;
+        });
+      }
     } catch (e) {
       setError("Tidak bisa terhubung ke backend. Pastikan FastAPI berjalan.");
     }
@@ -69,8 +91,15 @@ export function useMonitoring() {
       const d = r.data || {};
       setData(d);
       setLastCek(new Date());
-      if (d.gambar_b64)       setCurImg(d.gambar_b64);
-      else if (d.gambar_url)  setCurImg(d.gambar_url);
+
+      let newImg = null;
+      if (d.gambar_b64) newImg = d.gambar_b64;
+      else if (d.gambar_url) newImg = resolveImgUrl(d.gambar_url);
+
+      if (newImg) {
+        setCurImg(newImg);
+        try { localStorage.setItem("hematrix_cur_img", newImg); } catch {}
+      }
       await loadHistory();
     } catch (e) {
       setError("Gagal menghubungi backend: " + (e.message || "timeout"));

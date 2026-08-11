@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, ZoomIn } from "lucide-react";
-import { getStyle, formatWaktu } from "../utils/helpers";
+import { getStyle, formatWaktu, resolveImgUrl } from "../utils/helpers";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 const PER_PAGE = 5;
@@ -55,17 +55,17 @@ export default function HistoryTable({ data }) {
                 <td className="px-4 py-3"><Badge kondisi={row.kondisi} /></td>
                 <td className="px-4 py-3 text-xs text-slate-500 max-w-[180px] truncate">{row.notifikasi}</td>
                 <td className="px-4 py-3">
-                  {row.gambar ? (
+                  {row.gambar_url || row.gambar ? (
                     <div className="flex items-center gap-1.5">
                       <div className="w-10 h-7 bg-slate-200 rounded overflow-hidden flex items-center justify-center">
                         <img
-                          src={`${API_BASE}/${row.gambar}`}
+                          src={resolveImgUrl(row.gambar_url || `/api/captures/${row.gambar}`)}
                           alt="cap"
                           className="w-full h-full object-cover"
                           onError={e => { e.target.style.display = "none"; }}
                         />
                       </div>
-                      <a href={`${API_BASE}/${row.gambar}`} target="_blank" rel="noreferrer"
+                      <a href={resolveImgUrl(row.gambar_url || `/api/captures/${row.gambar}`)} target="_blank" rel="noreferrer"
                         className="text-slate-400 hover:text-blue-500 transition-colors">
                         <ZoomIn size={13} />
                       </a>

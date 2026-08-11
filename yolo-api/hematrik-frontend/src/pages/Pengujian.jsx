@@ -1,6 +1,7 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { API } from "../hooks/useMonitoring";
+import { resolveImgUrl } from "../utils/helpers";
 
 const inputStyle = {
   width: "100%",
@@ -264,7 +265,7 @@ export default function Pengujian({ loadHistory }) {
             {result?.gambar_url || result?.gambar_b64 ? (
               <div style={{ borderRadius: 16, overflow: "hidden", border: "1px solid #e5e7eb" }}>
                 <img
-                  src={result.gambar_url || result.gambar_b64}
+                  src={resolveImgUrl(result.gambar_url) || result.gambar_b64}
                   alt="Hasil Deteksi"
                   style={{ width: "100%", display: "block", objectFit: "contain", maxHeight: 360, background: "#000" }}
                 />

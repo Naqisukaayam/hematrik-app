@@ -341,6 +341,7 @@ ensure_tables()
 os.makedirs(CAPTURES_DIR, exist_ok=True)
 
 @app.get("/captures/{filename}")
+@app.get("/api/captures/{filename}")
 def get_capture(filename: str):
     path = os.path.join(CAPTURES_DIR, filename)
     if os.path.isfile(path):

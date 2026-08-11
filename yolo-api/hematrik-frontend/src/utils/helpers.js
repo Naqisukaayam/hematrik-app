@@ -24,3 +24,16 @@ export function fmtCountdown(sec) {
   const s = sec % 60;
   return m + ':' + String(s).padStart(2,'0');
 }
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+
+export function resolveImgUrl(url) {
+  if (!url) return null;
+  if (url.startsWith("data:") || url.startsWith("http://") || url.startsWith("https://")) {
+    return url;
+  }
+  const base = API_BASE.replace(/\/+$/, "");
+  const path = url.startsWith("/") ? url : `/${url}`;
+  return `${base}${path}`;
+}
+
